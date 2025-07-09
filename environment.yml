@@ -1,0 +1,19 @@
+name: last-mile-ds
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - jupyterlab
+  - notebook
+  - mlflow
+  - scipy
+  - statsmodels
+  - ipykernel
+  - pip
+  - pip:
+      - datasets  # HuggingFace datasets for easy loading
