@@ -1,178 +1,48 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
+# Ant Colony Optimization
 
-# explain how ant colony route optimization works and show an example in python
-
-Ant Colony Optimization (ACO) is a probabilistic technique used to solve computational problems that can be reduced to finding optimal paths through graphs[^1][^2]. It's a member of the swarm intelligence family of algorithms and is inspired by the foraging behavior of real ants[^3][^4].
+Ant Colony Optimization (ACO) is a probabilistic technique used to solve computational problems that can be reduced to finding optimal paths through graphs. It's a member of the swarm intelligence family of algorithms and is inspired by the foraging behavior of real ants.
 
 ### How Ant Colony Optimization Works
 
-The core idea of ACO is modeled on how ants find the shortest path between their colony and a food source[^5][^4].
+The core idea of ACO is modeled on how ants find the shortest path between their colony and a food source.
 
-1. **Exploration and Pheromone Trails**: Initially, ants wander randomly in search of food[^4]. When an ant finds a food source, it returns to the colony, laying down a chemical trail of pheromones along its path[^6].
-2. **Path Reinforcement**: Other ants, upon encountering this pheromone trail, are likely to follow it. As more ants travel this path to the food and back, they each deposit more pheromones, reinforcing the trail[^4].
-3. **Finding the Optimal Path**: Ants on shorter paths will complete their round trips faster than ants on longer paths. This means that in the same amount of time, the shorter path will be reinforced with more pheromones, making its scent stronger[^5][^4]. This stronger trail attracts even more ants.
-4. **Pheromone Evaporation**: The pheromone trails are not permanent; they evaporate over time[^5]. If a path is no longer used, or used infrequently (like a long, inefficient route), its pheromone trail will decay and disappear[^4]. This evaporation prevents the colony from getting stuck on a suboptimal path and allows for dynamic adaptation if the environment changes.
+1. **Exploration and Pheromone Trails**: Initially, ants wander randomly in search of food. When an ant finds a food source, it returns to the colony, laying down a chemical trail of pheromones along its path.
+2. **Path Reinforcement**: Other ants, upon encountering this pheromone trail, are likely to follow it. As more ants travel this path to the food and back, they each deposit more pheromones, reinforcing the trail.
+3. **Finding the Optimal Path**: Ants on shorter paths will complete their round trips faster than ants on longer paths. This means that in the same amount of time, the shorter path will be reinforced with more pheromones, making its scent stronger. This stronger trail attracts even more ants.
+4. **Pheromone Evaporation**: The pheromone trails are not permanent; they evaporate over time. If a path is no longer used, or used infrequently (like a long, inefficient route), its pheromone trail will decay and disappear. This evaporation prevents the colony from getting stuck on a suboptimal path and allows for dynamic adaptation if the environment changes.
 
-This combination of path reinforcement and pheromone evaporation allows the ant colony to collectively converge on the most efficient route[^5][^4].
+This combination of path reinforcement and pheromone evaporation allows the ant colony to collectively converge on the most efficient route.
 
 ### The ACO Algorithm Cycle
 
-In a computational setting, the ACO algorithm simulates this behavior using "artificial ants" to find solutions to optimization problems like the Traveling Salesman Problem (TSP)[^7][^5]. The process generally follows these steps:
+In a computational setting, the ACO algorithm simulates this behavior using "artificial ants" to find solutions to optimization problems like the Traveling Salesman Problem (TSP). The process generally follows these steps:
 
-* **Initialization**: The algorithm starts by initializing parameters and placing a number of artificial ants at a starting node (the "colony")[^8]. Pheromone trails on all paths are set to an initial value[^7].
+* **Initialization**: The algorithm starts by initializing parameters and placing a number of artificial ants at a starting node (the "colony"). Pheromone trails on all paths are set to an initial value.
 * **Solution Construction**: Each ant builds a solution (e.g., a path visiting all cities in a TSP) by moving from node to node. The choice of the next node is probabilistic and is influenced by two main factors:
     * The strength of the pheromone trail on the path.
     * A heuristic value, such as the inverse of the distance to the next node (shorter distances are more attractive).
 * **Pheromone Update**: After all ants have completed their tours, the pheromone trails are updated. This happens in two phases:
-    * **Evaporation**: The pheromone level on all paths is reduced by a certain percentage to simulate natural evaporation[^7][^9].
-    * **Reinforcement**: Pheromones are added to the paths that the ants traveled. Shorter, more optimal paths receive a greater amount of pheromones[^7][^6].
-* **Termination**: This cycle of solution construction and pheromone updates is repeated for a set number of iterations or until a satisfactory solution has been found[^7][^8].
+    * **Evaporation**: The pheromone level on all paths is reduced by a certain percentage to simulate natural evaporation.
+    * **Reinforcement**: Pheromones are added to the paths that the ants traveled. Shorter, more optimal paths receive a greater amount of pheromones.
+* **Termination**: This cycle of solution construction and pheromone updates is repeated for a set number of iterations or until a satisfactory solution has been found.
 
+### How the Code Works
 
-### Python Example: Solving the Traveling Salesman Problem
+1. **Data Loading and Filtering**: The `load_and_filter_data` function reads the `delivery_sh.csv` file using pandas. It then filters the data to isolate the records for a single courier (`courier_id=2130`) on a single day (`ds=1010`). It extracts the latitude and longitude coordinates for these deliveries.
+2. **Depot and Distance Matrix**: A central depot is calculated as the average of all delivery coordinates. This depot and the delivery locations are combined into one set of points. The `calculate_distance_matrix` function then computes the Euclidean distance between every pair of points, creating a matrix that the ACO algorithm will use.
+3. **Running the ACO Algorithm**: The `run_aco` function orchestrates the entire optimization process. It initializes a pheromone matrix and then enters a loop for a specified number of iterations. In each iteration, it simulates a colony of ants building paths, and then it updates the pheromone trails based on the quality of those paths.
+4. **Ant Path Construction**: For each ant, a path is built step-by-step. The `choose_next_node` function is the core of an ant's decision-making. It calculates the probability of moving to each unvisited node based on a combination of the pheromone level on the path and the distance to that node.
+5. **Pheromone Update**: After all ants complete their tours, the `update_pheromones` function modifies the pheromone matrix. First, all trails are reduced by a `decay` factor to simulate evaporation. Then, pheromones are added to the paths the ants traveled, with shorter paths receiving a larger deposit. This reinforces good solutions.
+6. **Termination and Result**: The algorithm repeats this process, and with each iteration, the pheromone trails on the shorter paths become stronger, guiding the ants toward an optimal or near-optimal solution. The function returns the best path found across all iterations.
 
-Here is a Python implementation of the Ant Colony Optimization algorithm to find an approximate solution to the Traveling Salesman Problem (TSP).
+### Explanation of Model Parameters
 
-```python
-import numpy as np
+The effectiveness of the ACO algorithm is highly dependent on its parameters. Tuning them is key to finding good solutions efficiently.
 
-class AntColonyOptimization:
-    def __init__(self, distances, n_ants, n_iterations, decay, alpha=1, beta=1):
-        """
-        Args:
-            distances (2D numpy.array): Square matrix of distances between cities.
-            n_ants (int): Number of ants running per iteration.
-            n_iterations (int): Number of iterations.
-            decay (float): Rate at which pheromone decays.
-            alpha (int|float): Exponent on pheromone, higher alpha gives pheromone more weight.
-            beta (int|float): Exponent on distance, higher beta gives distance more weight.
-        """
-        self.distances  = distances
-        self.pheromone = np.ones(self.distances.shape) / len(distances)
-        self.all_inds = range(len(distances))
-        self.n_ants = n_ants
-        self.n_iterations = n_iterations
-        self.decay = decay
-        self.alpha = alpha
-        self.beta = beta
+* `n_ants` (Number of Ants): This determines how many potential solutions (paths) are explored in each iteration. A **higher number** of ants allows for a broader search of the solution space but increases computational cost. A **lower number** is faster but may lead to premature convergence on a suboptimal solution.
+* `n_iterations` (Number of Iterations): This is the total number of cycles the algorithm will run. More iterations give the algorithm more time to refine the pheromone trails and converge on a better solution. However, too many iterations may be unnecessary if the solution stops improving.
+* `decay` (Pheromone Evaporation Rate): This value, between 0 and 1, controls how quickly pheromone trails fade. A **high decay rate** (e.g., 0.5) causes pheromones to evaporate quickly, which encourages exploration of new paths. A **low decay rate** (e.g., 0.99) makes trails more persistent, favoring exploitation of known good paths. A common value is around 0.95.
+* `alpha` (Pheromone Influence): This parameter controls the weight given to the pheromone trail when an ant chooses its next step. A **higher `alpha`** makes ants more likely to follow existing strong trails, leading to faster convergence (exploitation). If `alpha` is 0, ants will not consider pheromones at all.
+* `beta` (Heuristic Influence): This parameter controls the weight given to the heuristic information, which in this case is the inverse of the distance (favoring shorter moves). A **higher `beta`** makes ants more "greedy," preferring to move to the nearest unvisited city. This focuses the search on locally optimal moves. If `beta` is 0, ants will ignore distance and only follow pheromones.
 
-    def run(self):
-        shortest_path = None
-        all_time_shortest_path = ("placeholder", np.inf)
-        for i in range(self.n_iterations):
-            all_paths = self.gen_all_paths()
-            self.spread_pheromone(all_paths, shortest_path, all_time_shortest_path)
-            shortest_path = min(all_paths, key=lambda x: x[^1])
-            if shortest_path[^1] < all_time_shortest_path[^1]:
-                all_time_shortest_path = shortest_path            
-            self.pheromone * self.decay
-        return all_time_shortest_path
-
-    def spread_pheromone(self, all_paths, shortest_path, all_time_shortest_path):
-        sorted_paths = sorted(all_paths, key=lambda x: x[^1])
-        for path, dist in sorted_paths:
-            for move in path:
-                self.pheromone[move] += 1.0 / self.distances[move]
-
-    def gen_path_dist(self, path):
-        total_dist = 0
-        for ele in path:
-            total_dist += self.distances[ele]
-        return total_dist
-
-    def gen_all_paths(self):
-        all_paths = []
-        for i in range(self.n_ants):
-            path = self.gen_path(0)
-            all_paths.append((path, self.gen_path_dist(path)))
-        return all_paths
-
-    def gen_path(self, start):
-        path = []
-        visited = set()
-        visited.add(start)
-        prev = start
-        for i in range(len(self.distances) - 1):
-            move = self.pick_move(self.pheromone[prev], self.distances[prev], visited)
-            path.append((prev, move))
-            prev = move
-            visited.add(move)
-        path.append((prev, start)) # going back to where we started
-        return path
-
-    def pick_move(self, pheromone, dist, visited):
-        pheromone = np.copy(pheromone)
-        pheromone[list(visited)] = 0
-
-        row = pheromone ** self.alpha * (( 1.0 / dist) ** self.beta)
-
-        norm_row = row / row.sum()
-        move = np.random.choice(self.all_inds, 1, p=norm_row)[^0]
-        return move
-
-# --- Example Usage ---
-if __name__ == '__main__':
-    # Create a distance matrix for 10 cities
-    distances = np.array([
-        [np.inf, 12, 10, 19, 8, 11, 15, 9, 20, 14],
-        [12, np.inf, 3, 7, 17, 6, 18, 5, 22, 13],
-        [10, 3, np.inf, 6, 20, 9, 21, 8, 25, 16],
-        [19, 7, 6, np.inf, 14, 3, 11, 2, 18, 9],
-        [8, 17, 20, 14, np.inf, 12, 5, 16, 4, 10],
-        [11, 6, 9, 3, 12, np.inf, 2, 5, 15, 4],
-        [15, 18, 21, 11, 5, 2, np.inf, 10, 9, 8],
-        [9, 5, 8, 2, 16, 5, 10, np.inf, 12, 7],
-        [20, 22, 25, 18, 4, 15, 9, 12, np.inf, 6],
-        [14, 13, 16, 9, 10, 4, 8, 7, 6, np.inf]
-    ])
-
-    # Initialize and run the ACO algorithm
-    aco = AntColonyOptimization(distances, n_ants=10, n_iterations=100, decay=0.95, alpha=1, beta=1)
-    shortest_path = aco.run()
-    
-    print(f"Shortest path found: {shortest_path[^0]}")
-    print(f"Total distance: {shortest_path[^1]}")
-```
-
-<div style="text-align: center">⁂</div>
-
-[^1]: https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms
-
-[^2]: https://en.wikipedia.org/wiki/Ant_colony_optimization
-
-[^3]: https://www.sciencedirect.com/topics/engineering/ant-colony-optimization
-
-[^4]: https://mathworld.wolfram.com/AntColonyAlgorithm.html
-
-[^5]: https://www.youtube.com/watch?v=u7bQomllcJw
-
-[^6]: http://www.scholarpedia.org/article/Ant_colony_optimization
-
-[^7]: https://www.geeksforgeeks.org/machine-learning/introduction-to-ant-colony-optimization/
-
-[^8]: https://www.youtube.com/watch?v=LkhSDKbQJ1g
-
-[^9]: https://www.datacamp.com/tutorial/swarm-intelligence
-
-[^10]: https://github.com/ub1979/ant_colony
-
-[^11]: https://www.slideshare.net/slideshow/ant-colony-opitimization-numerical-example/69347070
-
-[^12]: https://indiaai.gov.in/article/understanding-ant-colony-optimization-algorithms
-
-[^13]: https://github.com/zandershah/ant-colony-optimization
-
-[^14]: https://www4.acenet.edu/ant-colony-optimization
-
-[^15]: https://angms.science/doc/AI/AI_20_Algorithm_AntColony.pdf
-
-[^16]: https://github.com/Akavall/AntColonyOptimization
-
-[^17]: https://www.youtube.com/watch?v=783ZtAF4j5g
-
-[^18]: https://python.plainenglish.io/ant-colony-optimization-for-finding-the-optimal-well-trajectory-d673b86cf7a1
-
-[^19]: http://www.scholarpedia.org/article/Ant_algorithms
-
-[^20]: https://stackoverflow.com/questions/65309403/on-the-implementation-of-a-simple-ant-colony-algorithm
-
+The balance between **`alpha`** and **`beta`** is crucial. It manages the trade-off between *exploitation* (following known good paths reinforced by pheromones) and *exploration* (trying new, potentially shorter paths).
