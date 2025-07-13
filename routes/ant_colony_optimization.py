@@ -279,8 +279,8 @@ if delivery_points is not None and len(delivery_points) > 1:
     else:
         print("Skipping Grid Search")
         best_params_config['params'] = {
-            'n_ants': 3, # "20" for 100+
-            'n_iterations': 5, # "100" for 100+
+            'n_ants': 20, # "20" for 100+
+            'n_iterations': 100, # "100" for 100+
             'decay': 0.9,
             'alpha': 1,
             'beta': 3
