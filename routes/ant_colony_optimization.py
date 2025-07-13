@@ -1,21 +1,11 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
+#%%
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from itertools import product
-
 import plotly.graph_objects as go
 import plotly.io as pio
 pio.renderers.default = "notebook"
-
-
-# In[ ]:
-
 
 def load_and_filter_data(file_path, courier_id, day_id):
     try:
@@ -32,10 +22,10 @@ def load_and_filter_data(file_path, courier_id, day_id):
 def calculate_distance_matrix(points):
     """
     Calculates the pairwise Euclidean distance matrix for a set of points.
-    
+
     Args:
         points (numpy.ndarray): An array of shape (n_points, n_dimensions) representing the coordinates of each point.
-    
+
     Returns:
         numpy.ndarray: A symmetric (n_points, n_points) array where the entry at [i, j] contains the Euclidean distance between points i and j.
     """
@@ -81,9 +71,9 @@ def run_aco_with_history(distances, n_ants, n_iterations, decay, alpha, beta):
     best_path_distance = np.inf
     distance_history = []  # To store best distance per iteration
 
-    for i in range(n_iterations):
+    for i in range(n_iterations): # Total number of cycles the algorithm will run
         all_paths = []
-        for _ in range(n_ants):
+        for ant in range(n_ants): # Number of potential solutions (paths) are explored in each iteration
             path = [np.random.randint(n_points)]  # Start at a random node
             visited = set(path)
             while len(visited) < n_points:
@@ -91,9 +81,9 @@ def run_aco_with_history(distances, n_ants, n_iterations, decay, alpha, beta):
                 # Calculate probabilities for the next move:
                 pheromone_levels = np.copy(pheromone[current_node])
                 pheromone_levels[list(visited)] = 0  # Don't revisit nodes
-                heuristic_values = 1.0 / (distances[current_node] + 1e-10)  # Inverse distance (avoid division by zero)
+                heuristic_values = 1.0 / (distances[current_node] + 1e-10)  # Inverse distance; Favor shorter distances; Avoid x/0
                 # Probability ∝ (pheromone^alpha) * (heuristic^beta)
-                move_probabilities = (pheromone_levels ** alpha) * (heuristic_values ** beta)
+                move_probabilities = (pheromone_levels ** alpha) * (heuristic_values ** beta) # Probability of move to next node
                 sum_probs = np.sum(move_probabilities)
                 if sum_probs == 0:
                     # If all probabilities are zero, pick randomly among unvisited
@@ -152,7 +142,7 @@ def perform_grid_search(distances):
         param_grid['alpha'],
         param_grid['beta']
     ))
-    
+
     results = []
     print(f"Starting grid search with {len(params_list)} combinations...")
 
@@ -188,12 +178,11 @@ def plot_convergence(distance_history):
     plt.grid(True)
     plt.show()
 
-
 def plot_route_plotly(points, best_path):
     """
     Plots the final, optimized route on an interactive 2D scatter plot using Plotly.
     Hover data shows the route order like Depot -> 1 -> 2 -> ... -> N -> Depot.
-    
+
     Args:
         points (numpy.array): An array of all coordinates, with the depot at index 0.
         best_path (list): A list of indices representing the optimized route.
@@ -207,7 +196,7 @@ def plot_route_plotly(points, best_path):
     # Create the full path for plotting, including the return to the depot.
     path_order = best_path + [best_path[0]]
     ordered_points = points[path_order]
-    
+
     hover_texts = []
     for i, point_index in enumerate(path_order):
         if i == 0:
@@ -219,10 +208,10 @@ def plot_route_plotly(points, best_path):
             # The original code used i+1, causing an off-by-one error.
             # Using 'i' provides the correct 1-based stop number (Stop 1, Stop 2, etc.).
             hover_texts.append(f"Delivery Stop {i}")
-            
+
     # Initialize the Plotly figure.
     fig = go.Figure()
-    
+
     # Add the main route trace (lines and markers).
     fig.add_trace(go.Scatter(
         x=ordered_points[:, 1],  # Longitude
@@ -239,7 +228,7 @@ def plot_route_plotly(points, best_path):
         ),
         name='Optimized Route'
     ))
-    
+
     # Add a separate, more prominent marker for the depot.
     fig.add_trace(go.Scatter(
         x=[points[0, 1]],
@@ -255,7 +244,7 @@ def plot_route_plotly(points, best_path):
         ),
         name='Depot'
     ))
-    
+
     # Update the layout for a clean, professional look.
     fig.update_layout(
         title="Optimized Delivery Route",
@@ -267,67 +256,51 @@ def plot_route_plotly(points, best_path):
     )
     return fig
 
+# Configuration
+FILE_PATH = '../datasets/delivery_sh.csv'
+COURIER_ID = 1061
+DAY_ID = 621
+GRID_SEARCH = False
+best_params_config = {}
 
-# In[ ]:
+delivery_points = load_and_filter_data(FILE_PATH, COURIER_ID, DAY_ID)
+if delivery_points is not None and len(delivery_points) > 1:
+    depot = np.mean(delivery_points, axis=0)
+    all_points = np.vstack([depot, delivery_points])
+    distance_matrix = calculate_distance_matrix(all_points)
 
+    if GRID_SEARCH:
+        print("Brute Force Grid Search")
+        best_params_config, all_results = perform_grid_search(distance_matrix)
 
-if __name__ == '__main__':
-    # Configuration
-    FILE_PATH = '../datasets/delivery_sh.csv'
-    COURIER_ID = 2130
-    DAY_ID = 1010
-    GRID_SEARCH = False
-    best_params_config = {}
-    
-    delivery_points = load_and_filter_data(FILE_PATH, COURIER_ID, DAY_ID)
-    if delivery_points is not None and len(delivery_points) > 1:
-        depot = np.mean(delivery_points, axis=0)
-        all_points = np.vstack([depot, delivery_points])
-        distance_matrix = calculate_distance_matrix(all_points)
+        print("\n--- Grid Search Complete ---")
+        print(f"Best parameters found: {best_params_config['params']}")
+        print(f"Resulting in a distance of: {best_params_config['distance']:.2f}")
+    else:
+        print("Skipping Grid Search")
+        best_params_config['params'] = {
+            'n_ants': 3, # "20" for 100+
+            'n_iterations': 5, # "100" for 100+
+            'decay': 0.9,
+            'alpha': 1,
+            'beta': 3
+        }
 
-        if GRID_SEARCH:
-            print("Brute Force Grid Search")
-            best_params_config, all_results = perform_grid_search(distance_matrix)
-            
-            print("\n--- Grid Search Complete ---")
-            print(f"Best parameters found: {best_params_config['params']}")
-            print(f"Resulting in a distance of: {best_params_config['distance']:.2f}")
-        else:
-            print("Skipping Grid Search")
-            best_params_config['params'] = {
-                'n_ants': 20,
-                'n_iterations': 100,
-                'decay': 0.9,
-                'alpha': 1,
-                'beta': 3
-            }
-            
-        print("\nRunning ACO with optimal parameters to generate final route and visualizations...")
-        best_params = best_params_config['params']
-        final_path, final_dist, final_history = run_aco_with_history(
-            distances=distance_matrix,
-            n_ants=best_params['n_ants'],
-            n_iterations=best_params['n_iterations'],
-            decay=best_params['decay'],
-            alpha=best_params['alpha'],
-            beta=best_params['beta']
-        )
-        print(f"Total Distance: {final_dist:.4f}")
-        print("\nDisplaying visualizations...")
-        
-        plot_convergence(final_history)
-        
-        fig = plot_route_plotly(all_points, final_path)
+    print("\nRunning ACO with optimal parameters to generate final route and visualizations...")
+    best_params = best_params_config['params']
+    final_path, final_dist, final_history = run_aco_with_history(
+        distances=distance_matrix,
+        n_ants=best_params['n_ants'],
+        n_iterations=best_params['n_iterations'],
+        decay=best_params['decay'],
+        alpha=best_params['alpha'],
+        beta=best_params['beta']
+    )
+    print(f"Total Distance: {final_dist:.4f}")
+    print("\nDisplaying visualizations...")
 
+    plot_convergence(final_history)
 
-# In[ ]:
-
-
-fig.show()
-
-
-# In[ ]:
-
-
-fig.write_html("optimized_route_ant.html")
-
+    fig = plot_route_plotly(all_points, final_path)
+    fig.show()
+    fig.write_html("optimized_route_ant.html")
