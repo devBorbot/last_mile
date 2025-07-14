@@ -169,7 +169,7 @@ pheromone *= decay
 for path, dist in all_paths:
     for j in range(n_points - 1):
         pheromone[path[j], path[j+1]] += 1.0 / dist
-    pheromone[path[-1], path[^0]] += 1.0 / dist
+    pheromone[path[-1], path[0]] += 1.0 / dist
 ```
 
 
@@ -192,8 +192,8 @@ for path, dist in all_paths:
     * This is the core of the pheromone deposition process. For each segment of the path traveled by an ant, this line adds new pheromone to that edge.
     * The amount of pheromone deposited is `1.0 / dist`, which is **inversely proportional to the total length of the path**.
     * This means that ants that found **shorter (better) paths deposit a larger amount of pheromone**, while ants that traveled longer (worse) paths deposit less. This reinforces good solutions and makes those paths more attractive to ants in the next iteration.
-* **`pheromone[path[-1], path] += 1.0 / dist`**
-    * This final line ensures the entire tour is reinforced. It adds pheromone to the last leg of the journey: the path from the final delivery stop (`path[-1]`) back to the starting point (`path`). This completes the pheromone update for one ant's entire circular tour.
+* **`pheromone[path[-1], path[0]] += 1.0 / dist`**
+    * This final line ensures the entire tour is reinforced. It adds pheromone to the last leg of the journey: the path from the final delivery stop (`path[-1]`) back to the starting point (`path[0]`). This completes the pheromone update for one ant's entire circular tour.
 
 ### Record Best Iteration Solution 
 
